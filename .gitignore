@@ -4,6 +4,7 @@ cross/
 
 # Libraries
 gnu-efi/
+inc/
 
 # Compiled object files
 lib/

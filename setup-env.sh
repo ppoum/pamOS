@@ -80,6 +80,18 @@ echo "----------"
 sh scripts/build-gnu-efi.sh
 
 echo "----------"
+echo "COPYING LINUX HEADER FILES"
+echo "----------"
+mkdir -p inc
+cp /usr/aarch64-linux-gnu/include/asm-generic/int-ll64.h inc/int-ll64.h
+# Remove unused import
+sed -i '/.*bitsperlong.*/d' inc/int-ll64.h
+
+cp /usr/include/linux/elf.h inc/elf.h
+# Replace import to linux/types.h to int-ll64.h, as it is the only type used
+sed -i inc/elf.h -e '/.*types.h>/d' -e 's/linux\/elf-em/int-ll64/'
+
+echo "----------"
 echo "CLEANING UP"
 echo "----------"
 rm -dfr cc-src/build-binutils cc-src/build-gdb cc-src/build-gcc
