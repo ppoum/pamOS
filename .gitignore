@@ -1,0 +1,11 @@
+# Toolchain related folders
+cc-src/
+cross/
+
+# Libraries
+gnu-efi/
+
+# Compiled object files
+lib/
+BOOTX64.EFI
+os.img
