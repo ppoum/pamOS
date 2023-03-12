@@ -12,7 +12,6 @@ PLATFORM_TARGET=x86_64-elf
 GCC=$(shell pwd)/cross/bin/${PLATFORM_TARGET}-gcc
 LD=$(shell pwd)/cross/bin/${PLATFORM_TARGET}-ld
 OBJCOPY=$(shell pwd)/cross/bin/${PLATFORM_TARGET}-objcopy
-OBJCOPY=/home/pam/opt/cross/bin/x86_64-elf-objcopy
 GNUEFIDIR:=$(shell pwd)/gnu-efi
 
 BOOT_CFLAGS = -I$(GNUEFIDIR)/inc -Iinc/ -fpic -ffreestanding -fno-stack-protector -fno-stack-check -fshort-wchar
@@ -21,7 +20,7 @@ BOOT_LDFLAGS = -shared -Bsymbolic -L$(GNUEFIDIR)/x86_64/lib -L$(GNUEFIDIR)/x86_6
 BOOT_LDFLAGS += $(GNUEFIDIR)/x86_64/gnuefi/crt0-efi-x86_64.o
 BOOT_LIBS = -lgnuefi -lefi
 
-CFLAGS = -ffreestanding -mno-red-zone -nostdlib -g
+CFLAGS = -ffreestanding -mno-red-zone -nostdlib -g -Wall
 
 
 # Kernel sources (used after exiting EFI)
@@ -35,6 +34,9 @@ iso: os.img
 
 qemu: os.img
 	$(shell ./start-qemu.sh)
+
+debug: os.img
+	$(shell ./start-qemu-debug.sh)
 # ----- END ROOT TARGETS -----
 
 os.img: BOOTX64.EFI $(OBJDIR)/kernel.elf
@@ -53,7 +55,7 @@ BOOTX64.EFI: $(OBJDIR)/boot/main.so
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-x86_64 --subsystem=10 $< $@
 
 # Top ELF target
-$(OBJDIR)/kernel.elf: $(C_OBJS)
+$(OBJDIR)/kernel.elf: $(C_OBJS) $(OBJDIR)/etc/font.o
 	$(LD) -o $@ $^ -e main
 
 # Boot (EFI) related dependencies
@@ -68,3 +70,8 @@ $(OBJDIR)/boot/%.o: $(BOOTDIR)/%.c
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
 	$(GCC) $(CFLAGS) -o $@ -c $<
+
+#  - Font used by stdio (copy to binary object with label usable by other modules)
+$(OBJDIR)/etc/font.o: $(SRCDIR)/etc/font.psf
+	@mkdir -p $(@D)
+	cd $(SRCDIR)/etc; $(OBJCOPY) -O elf64-x86-64 -B i386 -I binary font.psf ../../$(OBJDIR)/etc/font.o

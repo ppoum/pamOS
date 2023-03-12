@@ -24,7 +24,8 @@ int memcmp(const void* a, const void* b, UINT64 n) {
 }
 
 BOOLEAN validateElfHeader(Elf64_Ehdr *header) {
-    return memcmp(&header->e_ident[EI_MAG0], ELFMAG0, SELFMAG) &&    // Magic bytes match
+    const char* magicBytes = ELFMAG;
+    return memcmp(&header->e_ident[EI_MAG0], &magicBytes, SELFMAG) &&    // Magic bytes match
     header->e_ident[EI_CLASS] == ELFCLASS64 &&                      // 64-bit elf
     header->e_ident[EI_DATA] == ELFDATA2LSB &&                      // Using 2's complement w/ LSB ordering
     header->e_type == ET_EXEC &&                                    // Elf is executable
