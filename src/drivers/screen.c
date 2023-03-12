@@ -1,5 +1,5 @@
 #include "screen.h"
-#include "../plib/stdio.h"
+#include "../plibc/stdio.h"
 
 // GLOBAL VARIABLES
 uint32_t* FRAME_BUFFER;

@@ -2,7 +2,7 @@
 
 #include "../drivers/screen.h"
 
-#include "../plib/stdio.h"
+#include "../plibc/stdio.h"
 
 int main(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t verticalRes, uint32_t ppsl) {
     initializeScreen(frameBufferBase, horizontalRes, verticalRes, ppsl);
