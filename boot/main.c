@@ -92,6 +92,21 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     UINT32 descriptorVersion;
     map = LibMemoryMap(&mapEntryCount, &mapKey, &descriptorSize, &descriptorVersion);
 
+    // Locate GOP
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+    EFI_GUID gopGUID = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->LocateProtocol, 3, &gopGUID, NULL, (void**)&gop);
+    if (EFI_ERROR(status)) {
+        Print(L"Unable to locate the GOP.\r\n");
+        return status;
+    }
+
+    Print(L"DEBUG: Frame buffer: 0x%x\r\n", &gop->Mode->FrameBufferBase);
+    Print(L"DEBUG: Frame horizontal: %d\r\n", gop->Mode->Info->HorizontalResolution);
+    Print(L"DEBUG: Frame vertical: %d\r\n", gop->Mode->Info->VerticalResolution);
+    Print(L"DEBUG: Frame PPSL: %d\r\n", gop->Mode->Info->PixelsPerScanLine);
+
+
     Print(L"Press any key to enter the kernel.\r\n");
 
     // Clear input buffer
@@ -106,8 +121,8 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     // Exit boot services
     uefi_call_wrapper(BS->ExitBootServices, 2, ImageHandle, mapKey);
 
-    int (*kernelEntry)() = ((__attribute__((sysv_abi)) int(*)())elfHeader.e_entry);
-    kernelEntry();
+    int (*kernelEntry)() = ((__attribute__((sysv_abi)) int(*)(UINT64, UINT32, UINT32, UINT32))elfHeader.e_entry);
+    kernelEntry(gop->Mode->FrameBufferBase, gop->Mode->Info->HorizontalResolution, gop->Mode->Info->VerticalResolution, gop->Mode->Info->PixelsPerScanLine);
 
     Print(L"Exited kernel.\r\n");
     for(;;);
