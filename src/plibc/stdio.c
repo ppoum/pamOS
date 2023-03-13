@@ -22,6 +22,8 @@ uint32_t CHAR_HOR, CHAR_VER;
 
 // CURSOR
 uint32_t CUR_X_POS, CUR_Y_POS;
+uint32_t FG_COLOR = 0x00FFFFFF;  // White
+uint32_t BG_COLOR = 0x00000000;  // Black
 
 void loadFont(uint32_t horizontalRes, uint32_t verticalRes) {
     CUR_X_POS = 0;
@@ -30,6 +32,28 @@ void loadFont(uint32_t horizontalRes, uint32_t verticalRes) {
     CHAR_HOR = horizontalRes / font->width;
     CHAR_VER = verticalRes / font->height;
 }
+
+void setCursor(uint32_t x, uint32_t y) {
+    CUR_X_POS = x;
+    CUR_Y_POS = y;
+}
+
+uint32_t getCursorX() {
+    return CUR_X_POS;
+}
+
+uint32_t getCursorY() {
+    return CUR_Y_POS;
+}
+
+void setForegroundColor(uint32_t color) {
+    FG_COLOR = color;
+}
+
+void setBackgroundColor(uint32_t color) {
+    BG_COLOR = color;
+}
+
 
 int putchar(int c) {
     char character = (char) c;
@@ -52,9 +76,9 @@ int putchar(int c) {
     for (int row = 0; row < font->height; row++) {
         for (int col = 0; col < font->width; col++) {
             if (*glyph & (1 << (7 - col))) {
-                writePixel(topRow + row, topCol + col, 255, 255, 255);
-            } else
-                writePixel(topRow + row, topCol + col, 0, 0, 0);
+                writePixel(topRow + row, topCol + col, FG_COLOR);
+            } else if (BG_COLOR != COLOR_TRANSPARENT_BG)
+                writePixel(topRow + row, topCol + col, BG_COLOR);
         }
         glyph++;
     }
@@ -74,4 +98,11 @@ int puts(const char *str) {
         putchar(*str++);
     }
     return 1;
+}
+
+uint64_t fwrite(const void *s, uint64_t size, uint64_t nmemb) {
+    for (int i = 0; i < size*nmemb; i++) {
+        putchar(*(char*)s++);
+    }
+    return nmemb;
 }

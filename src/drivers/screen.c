@@ -23,6 +23,6 @@ uint32_t getScreenVerticalRes() {
     return VERTICAL_RES;
 }
 
-void writePixel(uint32_t row, uint32_t col, uint8_t r, uint8_t g, uint8_t b) {
-    FRAME_BUFFER[row * PPSL + col] = (r << 16) + (g << 8) + b;
+void writePixel(uint32_t row, uint32_t col, uint32_t color) {
+    FRAME_BUFFER[row * PPSL + col] = color;
 }

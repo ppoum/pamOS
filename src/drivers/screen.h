@@ -8,6 +8,6 @@ void initializeScreen(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t
 uint32_t getScreenHorizontalRes();
 uint32_t getScreenVerticalRes();
 
-void writePixel(uint32_t row, uint32_t col, uint8_t r, uint8_t g, uint8_t b);
+void writePixel(uint32_t row, uint32_t col, uint32_t color);
 
 #endif

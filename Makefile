@@ -26,6 +26,8 @@ CFLAGS = -ffreestanding -mno-red-zone -nostdlib -g -Wall
 # Kernel sources (used after exiting EFI)
 C_SRCS = $(call rwildcard, $(SRCDIR), *.c)
 C_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(C_SRCS))
+ASM_SRCS = $(call rwildcard, $(SRCDIR), *.asm)
+ASM_OBJS = $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%.o, $(ASM_SRCS))
 
 # ----- ROOT TARGETS -----
 all: iso
@@ -55,7 +57,7 @@ BOOTX64.EFI: $(OBJDIR)/boot/main.so
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-x86_64 --subsystem=10 $< $@
 
 # Top ELF target
-$(OBJDIR)/kernel.elf: $(C_OBJS) $(OBJDIR)/etc/font.o
+$(OBJDIR)/kernel.elf: $(C_OBJS) $(ASM_OBJS) $(OBJDIR)/etc/font.o
 	$(LD) -o $@ $^ -e main
 
 # Boot (EFI) related dependencies
@@ -67,9 +69,15 @@ $(OBJDIR)/boot/%.o: $(BOOTDIR)/%.c
 	$(GCC) $(BOOT_CFLAGS) -o $@ -c $<
 
 # Kernel (ELF) related dependencies
+#  - C files
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
 	$(GCC) $(CFLAGS) -o $@ -c $<
+
+#  - Asm files
+$(OBJDIR)/%.o: $(SRCDIR)/%.asm
+	@mkdir -p $(@D)
+	nasm $< -f elf64 -o $@
 
 #  - Font used by stdio (copy to binary object with label usable by other modules)
 $(OBJDIR)/etc/font.o: $(SRCDIR)/etc/font.psf
