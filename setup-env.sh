@@ -83,7 +83,16 @@ echo "----------"
 echo "COPYING LINUX HEADER FILES"
 echo "----------"
 mkdir -p inc
-cp /usr/aarch64-linux-gnu/include/asm-generic/int-ll64.h inc/int-ll64.h
+
+# File can often be found in 1 of 2 places
+if [ -f "/usr/aarch64-linux-gnu/include/asm-generic/int-ll64.h" ]; then
+    cp /usr/aarch64-linux-gnu/include/asm-generic/int-ll64.h inc/int-ll64.h
+elif [ -f "/usr/include/asm-generic/int-ll64.h" ]; then
+    cp /usr/include/asm-generic/int-ll64.h inc/int-ll64.h
+else
+    echo "Could not find file int-ll64.h"
+    exit 1
+fi
 # Remove unused import
 sed -i '/.*bitsperlong.*/d' inc/int-ll64.h
 
