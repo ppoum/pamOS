@@ -35,10 +35,10 @@ boot: BOOTX64.EFI
 iso: os.img
 
 qemu: os.img
-	$(shell ./start-qemu.sh)
+	$(shell ./scripts/start-qemu.sh)
 
 debug: os.img
-	$(shell ./start-qemu-debug.sh)
+	$(shell ./scripts/start-qemu-debug.sh)
 # ----- END ROOT TARGETS -----
 
 os.img: BOOTX64.EFI $(OBJDIR)/kernel.elf
