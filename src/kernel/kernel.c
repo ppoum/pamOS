@@ -1,7 +1,11 @@
 #include "../types.h"
 
 #include "../drivers/screen.h"
+#include "../drivers/keyboard.h"
+
 #include "../hardware/cpuid.h"
+#include "../hardware/apic.h"
+#include "../hardware/msr.h"
 
 #include "./gdt.h"
 #include "./isr.h"
@@ -16,6 +20,7 @@ int main(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t verticalRes,
     loadGDT();
     setupHandlers();
     initializeScreen(frameBufferBase, horizontalRes, verticalRes, ppsl);
+    initializeKeyboard();
     asm("sti");
     
     // Paint background
@@ -50,7 +55,7 @@ int main(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t verticalRes,
     putchar('\n');
 
     // Check for some features
-    if (CPUID_check_edx_feature(CPUID_FEAT_EDX_APIC)) {
+    if (apic_check_present()) {
         setForegroundColor(COLOR_GREEN);
         setBackgroundColor(COLOR_TRANSPARENT_BG);
         puts("APIC present\n");
@@ -58,6 +63,16 @@ int main(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t verticalRes,
         setForegroundColor(COLOR_RED);
         setBackgroundColor(COLOR_WHITE);
         puts("No APIC\n");
+    }
+
+    if (msr_check_present()) {
+        setForegroundColor(COLOR_GREEN);
+        setBackgroundColor(COLOR_TRANSPARENT_BG);
+        puts("MSR present\n");
+    } else {
+        setForegroundColor(COLOR_RED);
+        setBackgroundColor(COLOR_WHITE);
+        puts("No MSR\n");
     }
 
     // uint32_t misc;
@@ -69,7 +84,6 @@ int main(uint64_t frameBufferBase, uint32_t horizontalRes, uint32_t verticalRes,
     uint32_t test;
     // CPUID_get_value(0x16, NULL, NULL, &test, NULL);
     CPUID_get_value(0x0, &test, NULL, NULL, NULL);
-    asm("int $0" ::);
 
     // uint32_t bus_freq;
     // CPUID_get_value(0x16, &bus_freq, NULL, NULL, NULL);

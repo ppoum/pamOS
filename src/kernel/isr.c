@@ -1,7 +1,8 @@
 #include "isr.h"
 
-#include "../plibc/stdio.h"
 #include "idt.h"
+#include "../drivers/ports.h"
+#include "../plibc/stdio.h"
 
 extern void isr0();
 extern void isr1();
@@ -25,6 +26,9 @@ extern void isr18();
 extern void isr19();
 extern void isr20();
 extern void isr21();
+
+extern void irq0();
+extern void irq1();
 
 const char *intelErrorMsg[] = {"Division by 0",
                                "NMI Interrupt",
@@ -51,6 +55,7 @@ const char *intelErrorMsg[] = {"Division by 0",
 irqh_t irqHandlers[256];
 
 void setupHandlers() {
+    // Intel exceptions
     setIDTEntry(0, (uintptr_t)isr0);
     setIDTEntry(1, (uintptr_t)isr1);
     setIDTEntry(2, (uintptr_t)isr2);
@@ -74,10 +79,23 @@ void setupHandlers() {
     setIDTEntry(20, (uintptr_t)isr20);
     setIDTEntry(21, (uintptr_t)isr21);
 
-    // Setup PIC
+    // IRQs
+    setIDTEntry(32, (uintptr_t)irq0);
+    setIDTEntry(33, (uintptr_t)irq1);
+
+    // Disable PIC
+    portByteOut(PIC_MASTER_COMMAND, 0x11);  // Restart (need to send all 3 ICWs)
+    portByteOut(PIC_MASTER_DATA, 0x20);     // Set offset to +32 (skip intel reserved) (ICW2)
+    portByteOut(PIC_MASTER_DATA, 1 << 3);   // Slave PIC on IRQ2 (0-indexed, shift 3 times) (ICW3)
+    portByteOut(PIC_MASTER_DATA, 0x01);     // 8086 mode, no other flags (ICW4)
+    portByteOut(PIC_MASTER_DATA, 0xFF);     // Done initializing, set mask to 0xFF (mask all)
 
 
     loadIDT();
+}
+
+void registerIRQHandler(int n, irqh_t handlerAddr) {
+    irqHandlers[n] = handlerAddr;
 }
 
 // Private functions (used by isr_asm.asm)
@@ -92,4 +110,11 @@ void intelInterruptHandler(int isrCode) {
     asm("cli; hlt" ::);
 }
 
-void genericInterruptHandler(int isrCode) {}
+void genericInterruptHandler(int isrCode) {
+    irqh_t handler = irqHandlers[isrCode];
+    if (handler == NULL) return;  // No handler set for IRQ #
+
+    handler();
+
+    // TODO send EOI to PIC
+}

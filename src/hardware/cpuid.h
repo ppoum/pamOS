@@ -81,7 +81,7 @@ int CPUID_get_model();
 int CPUID_get_max();
 void CPUID_get_value(uint32_t level, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 
-int CPUID_check_ecx_feature(CPUID_feature_t feat);
-int CPUID_check_edx_feature(CPUID_feature_t feat);
+bool CPUID_check_ecx_feature(CPUID_feature_t feat);
+bool CPUID_check_edx_feature(CPUID_feature_t feat);
 
 #endif

@@ -27,14 +27,14 @@ void CPUID_get_value(uint32_t level, uint32_t *eax, uint32_t *ebx, uint32_t *ecx
     __get_cpuid(level, eax, ebx, ecx, edx);
 }
 
-int CPUID_check_ecx_feature(CPUID_feature_t feat) {
+bool CPUID_check_ecx_feature(CPUID_feature_t feat) {
     uint32_t eax, unsued, ecx;
     __get_cpuid(1, &eax, &unsued, &ecx, &unsued);
-    return ecx & feat;
+    return ecx & feat ? true : false;
 }
 
-int CPUID_check_edx_feature(CPUID_feature_t feat) {
+bool CPUID_check_edx_feature(CPUID_feature_t feat) {
     uint32_t eax, unsued, edx;
     __get_cpuid(1, &eax, &unsued, &unsued, &edx);
-    return edx & feat;
+    return edx & feat ? true : false;
 }
